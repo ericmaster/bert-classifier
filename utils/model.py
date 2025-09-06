@@ -50,6 +50,8 @@ class SentimentClassifier(pl.LightningModule):
         # Métricas para clasificación binaria
         self.train_auroc = AUROC(task="binary")
         self.val_auroc = AUROC(task="binary")
+        self.train_accuracy = Accuracy(task="binary")
+        self.val_accuracy = Accuracy(task="binary")
 
     def forward(self, input_ids, attention_mask, labels=None):
         output = self.bert(input_ids, attention_mask=attention_mask)
@@ -67,10 +69,12 @@ class SentimentClassifier(pl.LightningModule):
         
         # Calcular métricas
         predictions = torch.sigmoid(outputs.squeeze())
+        pred_labels = (predictions >= 0.5).float()
         self.train_auroc(predictions, labels.squeeze())
         
-        self.log("train/loss", loss, prog_bar=True, logger=True, on_step=True, on_epoch=True)
-        self.log("train/auroc", self.train_auroc, on_step=False, on_epoch=True)
+        self.log("train/loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("train/auroc", self.train_auroc, logger=True, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("train/accuracy", self.train_accuracy(pred_labels, labels.squeeze()), logger=True, on_step=False, on_epoch=True, sync_dist=True)
         return {"loss": loss, "predictions": predictions, "labels": labels}
 
     def validation_step(self, batch, batch_idx):
@@ -81,10 +85,12 @@ class SentimentClassifier(pl.LightningModule):
         
         # Calcular métricas
         predictions = torch.sigmoid(outputs.squeeze())
+        pred_labels = (predictions >= 0.5).float()
         self.val_auroc(predictions, labels.squeeze())
-        
-        self.log("val/loss", loss, prog_bar=True, logger=True, on_epoch=True)
-        self.log("val/auroc", self.val_auroc, on_epoch=True)
+
+        self.log("val/loss", loss, prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("val/auroc", self.val_auroc, logger=True, on_step=False, on_epoch=True, sync_dist=True)
+        self.log("val/accuracy", self.val_accuracy(pred_labels, labels.squeeze()), prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True)
         return loss
 
     def test_step(self, batch, batch_idx):
@@ -92,7 +98,15 @@ class SentimentClassifier(pl.LightningModule):
         attention_mask = batch["attention_mask"]
         labels = batch["labels"]
         loss, outputs = self(input_ids, attention_mask, labels)
+
+        # Calcular métricas
+        predictions = torch.sigmoid(outputs.squeeze())
+        pred_labels = (predictions >= 0.5).float()
+        self.val_auroc(predictions, labels.squeeze())
+
         self.log("test/loss", loss, prog_bar=True, logger=True)
+        self.log("test/auroc", self.val_auroc, logger=True)
+        self.log("test/accuracy", self.val_accuracy(pred_labels, labels.squeeze()), logger=True)
         return loss
 
     def configure_optimizers(self):
