@@ -35,9 +35,9 @@ import zipfile
 import tempfile
 
 # Configuración de entrenamiento actualizada para clasificación binaria IMDB
-N_EPOCHS = 3  # Reducido para pruebas más rápidas
-BATCH_SIZE = 16
-NUM_WORKERS = 4
+N_EPOCHS = 10  # Reducido para pruebas más rápidas
+BATCH_SIZE = 32
+# NUM_WORKERS = 4
 
 # ============ Para compatibilidad con VSCode en ambientes basados en colab ===========
 
