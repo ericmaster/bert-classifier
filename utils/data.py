@@ -1,38 +1,11 @@
 import pandas as pd
-import numpy as np
-
-from tqdm.auto import tqdm
 
 import torch
-import torch.nn as nn
 from torch.utils.data import random_split, Dataset, DataLoader
-from torch.optim import AdamW
 
-from transformers import BertTokenizerFast as BertTokenizer, BertModel, get_linear_schedule_with_warmup
+from transformers import BertTokenizerFast as BertTokenizer
 
 import pytorch_lightning as pl
-import torchmetrics
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
-from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.loggers import CSVLogger
-from pytorch_lightning.callbacks import TQDMProgressBar, RichProgressBar
-
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, multilabel_confusion_matrix
-
-import seaborn as sns
-from pylab import rcParams
-import matplotlib.pyplot as plt
-from matplotlib import rc
-from torchmetrics import AUROC, Accuracy
-
-#nuevas librerias
-import kagglehub
-from kagglehub import KaggleDatasetAdapter
-import os
-import glob
-import zipfile
-import tempfile
 
 # Dataset class actualizada para clasificación binaria de sentimientos IMDB
 class IMDBDataset(Dataset):
